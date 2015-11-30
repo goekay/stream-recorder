@@ -27,5 +27,5 @@ Java 8
 
 Example:
 
-    # java -jar stream-recorder-X.X.X.jar -url "http://127.0.0.1/stream/mp3" -dir "C:\recordings" -hour 1 -min 30
+    # java -jar stream-recorder-X.X.X.jar -u "http://127.0.0.1/stream/mp3" -d "C:\recordings" -h 1 -m 30
 

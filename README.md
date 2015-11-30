@@ -1,6 +1,6 @@
-# StreamRecorder
+# stream-recorder
 
-StreamRecorder is a simple command line tool to record HTTP streams (e.g., ShoutCast, IceCast) that contain AAC or MP3 audio.
+stream-recorder is a simple command line tool to record HTTP streams (e.g., ShoutCast, IceCast) that contain AAC or MP3 audio.
 
 ## Requirements
 

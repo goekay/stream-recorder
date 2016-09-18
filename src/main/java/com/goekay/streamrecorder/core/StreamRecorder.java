@@ -38,6 +38,7 @@ public class StreamRecorder {
     private String fileExtension;
 
     public void start() throws IOException {
+        startMillis = System.currentTimeMillis();
         URLConnection connection = prepare();
 
         try (FileOutputStream outputStream = new FileOutputStream(tempFile);
@@ -45,7 +46,6 @@ public class StreamRecorder {
 
             print("Recording...");
 
-            startMillis = System.currentTimeMillis();
             byte[] buffer = new byte[16 * 1024];
             int bytesRead;
 

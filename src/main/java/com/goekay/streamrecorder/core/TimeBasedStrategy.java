@@ -1,7 +1,5 @@
 package com.goekay.streamrecorder.core;
 
-import com.goekay.streamrecorder.UserConfig;
-
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -14,14 +12,14 @@ public class TimeBasedStrategy implements StopRecordingStrategy, Runnable {
 
     private boolean shouldContinue = true;
 
-    public TimeBasedStrategy(UserConfig config) {
+    public TimeBasedStrategy(long recordDurationInSeconds) {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r);
             t.setDaemon(true);
             return t;
         });
 
-        executor.schedule(this, config.getRecordDurationInSeconds(), TimeUnit.SECONDS);
+        executor.schedule(this, recordDurationInSeconds, TimeUnit.SECONDS);
     }
 
     @Override

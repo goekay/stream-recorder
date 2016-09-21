@@ -12,9 +12,9 @@
     </Appenders>
 
     <Loggers>
-        <AsyncLogger name="org.apache.http.wire" level="DEBUG"/>
+        <AsyncLogger name="org.apache.http.wire" level="INFO"/>
 
-        <AsyncRoot level="DEBUG">
+        <AsyncRoot level="OFF">
             <AppenderRef ref="CONSOLE"/>
         </AsyncRoot>
     </Loggers>

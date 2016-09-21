@@ -3,7 +3,6 @@ package com.goekay.streamrecorder;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.validators.PositiveInteger;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.io.File;
 import java.net.URL;
@@ -51,10 +50,4 @@ public final class UserConfig {
             description = "Recording duration in minutes (can be combined with hours)"
     )
     private int minutes = 0;
-
-    /**
-     * Will be calculated from hours and minutes
-     */
-    @Setter
-    private long recordDurationInSeconds;
 }

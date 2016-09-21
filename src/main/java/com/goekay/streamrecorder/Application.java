@@ -4,7 +4,6 @@ import com.beust.jcommander.JCommander;
 import com.goekay.streamrecorder.core.StreamRecorder;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import static com.goekay.streamrecorder.Utils.error;
 import static com.goekay.streamrecorder.Utils.print;
@@ -33,29 +32,15 @@ public class Application {
     // -------------------------------------------------------------------------
 
     private static void run(UserConfig config) {
-        setDuration(config);
-
         print("[Config] Stream: %s", config.getStreamUrl());
         print("[Config] Recording directory: %s", config.getRecordDirectory());
         print("[Config] Recording duration: %s hour(s) %s minute(s)", config.getHours(), config.getMinutes());
 
-        StreamRecorder recorder = new StreamRecorder(config);
-        try {
+        try (StreamRecorder recorder = new StreamRecorder(config)) {
             recorder.start();
         } catch (IOException e) {
             error("Error occurred %s", e.getMessage());
         }
         print("Done");
-    }
-
-    private static void setDuration(UserConfig config) {
-        long duration = TimeUnit.HOURS.toSeconds(config.getHours())
-                + TimeUnit.MINUTES.toSeconds(config.getMinutes());
-
-        if (duration <= 0) {
-            throw new RuntimeException("Recording duration must be positive");
-        }
-
-        config.setRecordDurationInSeconds(duration);
     }
 }

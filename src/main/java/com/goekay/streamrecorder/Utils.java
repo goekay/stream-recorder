@@ -56,7 +56,11 @@ public final class Utils {
         }
     }
 
+    public static boolean hasNoValue(String str) {
+        return str == null || str.isEmpty();
+    }
+
     public static boolean hasValue(String str) {
-        return str != null && !str.isEmpty();
+        return !hasNoValue(str);
     }
 }

@@ -1,23 +1,26 @@
 package com.goekay.streamrecorder.core;
 
 import com.goekay.streamrecorder.UserConfig;
-import lombok.RequiredArgsConstructor;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.HttpConnectionFactory;
+import org.apache.http.conn.ManagedHttpClientConnection;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
+import org.apache.http.impl.conn.ManagedHttpClientConnectionFactory;
+import org.apache.http.impl.io.DefaultHttpRequestWriterFactory;
+import org.apache.http.ssl.SSLContexts;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import javax.net.ssl.SSLContext;
+import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-
-import static com.goekay.streamrecorder.Utils.cleanUp;
-import static com.goekay.streamrecorder.Utils.hasValue;
-import static com.goekay.streamrecorder.Utils.print;
-import static com.goekay.streamrecorder.Utils.warn;
 
 /**
  * Mothership
@@ -25,96 +28,52 @@ import static com.goekay.streamrecorder.Utils.warn;
  * @author Sevket Goekay <goekay@dbis.rwth-aachen.de>
  * @since 29.11.2015
  */
-@RequiredArgsConstructor
-public class StreamRecorder {
+public class StreamRecorder implements Closeable {
 
-    private final UserConfig config;
+    private final RecordContext context;
+    private final CloseableHttpClient client;
 
-    private File tempFile;
-    private long startMillis;
+    public StreamRecorder(UserConfig config) {
+        context = new RecordContext(config);
+        client = HttpClients.custom()
+                            .setConnectionManager(initConnectionManager())
+                            .build();
+    }
 
-    private StopRecordingStrategy stopRecordingStrategy;
-    private String filePrefix;
-    private String fileExtension;
+    private HttpClientConnectionManager initConnectionManager() {
+        // Use a custom connection factory to customize the process of
+        // initialization of outgoing HTTP connections. Beside standard connection
+        // configuration parameters HTTP connection factory can define message
+        // parser / writer routines to be employed by individual connections.
+        HttpConnectionFactory<HttpRoute, ManagedHttpClientConnection> connFactory =
+                new ManagedHttpClientConnectionFactory(
+                        DefaultHttpRequestWriterFactory.INSTANCE,
+                        (buffer, constraints) -> new StreamParser(buffer, constraints, context)
+                );
+
+        // SSL context for secure connections can be created either based on
+        // system or application specific properties.
+        SSLContext sslcontext = SSLContexts.createSystemDefault();
+
+        // Create a registry of custom connection socket factories for supported
+        // protocol schemes.
+        Registry<ConnectionSocketFactory> socketFactoryRegistry =
+                RegistryBuilder.<ConnectionSocketFactory>create()
+                        .register("http", PlainConnectionSocketFactory.INSTANCE)
+                        .register("https", new SSLConnectionSocketFactory(sslcontext))
+                        .build();
+
+        // Create a connection manager with custom configuration.
+        return new BasicHttpClientConnectionManager(socketFactoryRegistry, connFactory);
+    }
 
     public void start() throws IOException {
-        startMillis = System.currentTimeMillis();
-        URLConnection connection = prepare();
-
-        try (FileOutputStream outputStream = new FileOutputStream(tempFile);
-             InputStream is = connection.getInputStream()) {
-
-            print("Recording...");
-
-            byte[] buffer = new byte[16 * 1024];
-            int bytesRead;
-
-            // Actual recording logic
-            //
-            while ((bytesRead = is.read(buffer)) > -1 && stopRecordingStrategy.shouldContinue(bytesRead)) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-
-        } finally {
-            setFinalFileName();
-        }
+        HttpGet get = new HttpGet(context.getUserConfig().getStreamUrl().toString());
+        client.execute(get);
     }
 
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
-
-    private URLConnection prepare() throws IOException {
-        print("Preparing...");
-
-        URLConnection connection;
-        try {
-            connection = config.getStreamUrl().openConnection();
-            connection.connect();
-        } catch (Exception e) {
-            throw new RuntimeException("Connection could not be established");
-        }
-
-        File dir = config.getRecordDirectory();
-        tempFile = dir.toPath().resolve(".recording.tmp").toFile();
-
-        StreamHeaderReader headerReader = new StreamHeaderReader(connection.getHeaderFields());
-        fileExtension = headerReader.getFileExtension();
-
-        String prefix = cleanUp(config.getPreferredFilePrefix());
-        if (hasValue(prefix)) {
-            filePrefix = prefix;
-        } else {
-            filePrefix = headerReader.getName();
-        }
-
-        Integer kbps = headerReader.getBitrate();
-        if (kbps == null) {
-            warn("Since bit rate is unknown, the duration of the recording might be inaccurate "
-                    + "(probably longer than what you wanted)");
-            stopRecordingStrategy = new TimeBasedStrategy(config);
-        } else {
-            stopRecordingStrategy = new BitrateBasedStrategy(config.getRecordDurationInSeconds(), kbps);
-        }
-
-        return connection;
-    }
-
-    private void setFinalFileName() throws IOException {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm")
-                                                 .withZone(ZoneId.systemDefault());
-
-        String startStr = dtf.format(Instant.ofEpochMilli(startMillis));
-        String stopStr = dtf.format(Instant.now());
-
-        String fileName = filePrefix + "_[" + startStr + "__" + stopStr + "]." + fileExtension;
-
-        Path p = tempFile.toPath();
-        Path finalPath = Files.move(p, p.resolveSibling(fileName));
-        Path finalFileName = finalPath.getFileName();
-
-        if (finalFileName != null) {
-            print("File name: %s", finalFileName.toString());
-        }
+    @Override
+    public void close() throws IOException {
+        this.client.close();
     }
 }

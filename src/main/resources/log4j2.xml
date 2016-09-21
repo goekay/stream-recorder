@@ -14,7 +14,7 @@
     <Loggers>
         <AsyncLogger name="org.apache.http.wire" level="INFO"/>
 
-        <AsyncRoot level="OFF">
+        <AsyncRoot level="DEBUG">
             <AppenderRef ref="CONSOLE"/>
         </AsyncRoot>
     </Loggers>

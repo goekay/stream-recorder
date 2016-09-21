@@ -1,6 +1,5 @@
 package com.goekay.streamrecorder.core;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
@@ -24,7 +23,6 @@ import static com.goekay.streamrecorder.Utils.print;
  * @author Sevket Goekay <goekay@dbis.rwth-aachen.de>
  * @since 20.09.2016
  */
-@Slf4j
 public class StreamParser extends DefaultHttpResponseParser {
 
     private final SessionInputBuffer buffer;

@@ -13,7 +13,7 @@ import java.net.URL;
  * @since 29.11.2015
  */
 @Getter
-public final class RecordConfig {
+public final class UserConfig {
 
     @Parameter(
             names = {"-u", "--url"},

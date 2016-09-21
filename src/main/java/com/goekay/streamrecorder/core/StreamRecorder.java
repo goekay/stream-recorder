@@ -1,6 +1,6 @@
 package com.goekay.streamrecorder.core;
 
-import com.goekay.streamrecorder.RecordConfig;
+import com.goekay.streamrecorder.UserConfig;
 import lombok.RequiredArgsConstructor;
 
 import java.io.File;
@@ -28,7 +28,7 @@ import static com.goekay.streamrecorder.Utils.warn;
 @RequiredArgsConstructor
 public class StreamRecorder {
 
-    private final RecordConfig config;
+    private final UserConfig config;
 
     private File tempFile;
     private long startMillis;

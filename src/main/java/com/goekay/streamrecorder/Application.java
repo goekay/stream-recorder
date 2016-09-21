@@ -16,7 +16,7 @@ import static com.goekay.streamrecorder.Utils.print;
 public class Application {
 
     public static void main(String... args) {
-        RecordConfig config = new RecordConfig();
+        UserConfig config = new UserConfig();
         JCommander jCommander = new JCommander(config);
 
         if (args.length == 0) {
@@ -32,7 +32,7 @@ public class Application {
     // Private helpers
     // -------------------------------------------------------------------------
 
-    private static void run(RecordConfig config) {
+    private static void run(UserConfig config) {
         setDuration(config);
 
         print("[Config] Stream: %s", config.getStreamUrl());
@@ -48,7 +48,7 @@ public class Application {
         print("Done");
     }
 
-    private static void setDuration(RecordConfig config) {
+    private static void setDuration(UserConfig config) {
         long duration = TimeUnit.HOURS.toSeconds(config.getHours())
                 + TimeUnit.MINUTES.toSeconds(config.getMinutes());
 
